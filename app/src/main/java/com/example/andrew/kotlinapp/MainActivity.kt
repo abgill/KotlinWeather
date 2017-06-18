@@ -26,7 +26,6 @@ class MainActivity : AppCompatActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_main)
-        //supportActionBar?.setCustomView(R.menu.main_menu)
 
         fetchDataTask(this).execute(String.format(getString(R.string.weater_url),
                 dataStatus.zip,getString(R.string.weather_api_key)))
@@ -38,9 +37,6 @@ class MainActivity : AppCompatActivity() {
         }
 
         this.dataStatus = Dao.Companion.getDataStatus(db!!)
-
-        //db?.close()
-
     }
 
     override fun onCreateOptionsMenu(menu: Menu?): Boolean {
@@ -70,12 +66,9 @@ class MainActivity : AppCompatActivity() {
         if(resultCode == 3){
             this.dataStatus.zip = data?.getIntExtra("zip",0)!!
             Dao.Companion.writeDataStatus(this.db!!, DBSTATUS(dataStatus.zip, Date().time))
-            //weatherData = DataFetcher.Companion.fetchWeatherData(String.format(getString(R.string.weater_url),
-                    //this.dataStatus.zip,getString(R.string.weather_api_key)))
 
             fetchDataTask(this).execute(String.format(getString(R.string.weater_url),
                     dataStatus.zip,getString(R.string.weather_api_key)))
-            val m =4
         }
     }
 
@@ -128,6 +121,13 @@ class MainActivity : AppCompatActivity() {
                 dayView.text = formattedDate
             }
         }
+    }
+
+    override fun onDestroy() {
+        if(db != null){
+            db?.close()
+        }
+        super.onDestroy()
     }
 
 }
