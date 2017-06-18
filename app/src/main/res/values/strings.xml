@@ -1,0 +1,5 @@
+<resources>
+    <string name="app_name">KotlinApp</string>
+    <string name="title_activity_weather">WeatherActivity</string>
+    <string name="settings_button_title">settings</string>
+</resources>
