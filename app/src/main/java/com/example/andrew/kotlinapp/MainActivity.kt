@@ -121,14 +121,13 @@ class MainActivity : AppCompatActivity() {
                 highLow.text = day.temp.max.toString() + ", " + day.temp.min.toString()
 
                 val unixSeconds: Long = day.dt
-                val date = Date(unixSeconds * 1000L) // *1000 is to convert seconds to milliseconds
-                val sdf = SimpleDateFormat("yyyy-MM-dd HH:mm:ss z") // the format of your date
-                sdf.timeZone = TimeZone.getTimeZone("GMT-4") // give a timezone reference for formating (see comment at the bottom
+                val date = Date(unixSeconds * 1000L)
+                val sdf = SimpleDateFormat("EE MM/dd")
+                sdf.timeZone = TimeZone.getDefault()
                 val formattedDate = sdf.format(date)
                 dayView.text = formattedDate
             }
         }
-
     }
 
 }
