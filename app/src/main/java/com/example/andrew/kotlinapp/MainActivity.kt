@@ -2,6 +2,7 @@ package com.example.andrew.kotlinapp
 
 import android.content.Intent
 import android.database.sqlite.SQLiteDatabase
+import android.graphics.drawable.Drawable
 import android.os.AsyncTask
 import android.os.Bundle
 import android.support.v7.app.AppCompatActivity
@@ -17,9 +18,15 @@ import com.example.andrew.kotlinapp.modal.pojo.Day
 import com.example.andrew.kotlinapp.modal.pojo.WeatherData
 import java.text.SimpleDateFormat
 import java.util.*
+import android.support.v7.widget.DividerItemDecoration
+import android.widget.ImageView
+import java.io.InputStream
+import java.net.URL
+import kotlin.collections.HashMap
+
 
 class MainActivity : AppCompatActivity() {
-    var dataStatus:DBSTATUS = DBSTATUS(84062,0)
+    var dataStatus:DBSTATUS = DBSTATUS(20002,0)
     var db:SQLiteDatabase? = null
     var weatherData:WeatherData? = null
 
@@ -74,9 +81,38 @@ class MainActivity : AppCompatActivity() {
 
     inner class fetchDataTask(val context: MainActivity) : AsyncTask<String, Void, Void>() {
         var weatherData: WeatherData? = null
+        val iconMap: MutableMap<String,Drawable> = HashMap()
         override fun doInBackground(vararg params: String?): Void? {
             weatherData = DataFetcher.Companion.fetchWeatherData(params[0]!!)
+
+
+
+            for(day in weatherData?.list!!){
+                val icon = day.weather[0].icon
+                val urlStr = String.format("http://openweathermap.org/img/w/%s.png",icon)
+                try {
+                    if(iconMap.get(icon) == null) {
+                        iconMap.put(icon, LoadImageFromWebOperations(urlStr)!!)
+                    }
+                }catch (e : Exception){
+                    e.printStackTrace()
+                    continue
+                }
+
+            }
+
             return null
+        }
+
+        fun LoadImageFromWebOperations(url: String): Drawable? {
+            try {
+                val `is` = URL(url).getContent() as InputStream
+                val d = Drawable.createFromStream(`is`, "src name")
+                return d
+            } catch (e: Exception) {
+                return null
+            }
+
         }
 
         override fun onPostExecute(result: Void?) {
@@ -85,15 +121,22 @@ class MainActivity : AppCompatActivity() {
 
             val rv = context.findViewById(R.id.wetherView) as RecyclerView
             val layoutManager = LinearLayoutManager(context, LinearLayout.VERTICAL, false)
-            val adapter = WeatherAdapter(context.weatherData!!,context)
+            val adapter = WeatherAdapter(context.weatherData!!,context,iconMap)
 
             rv.layoutManager = layoutManager
             rv.adapter = adapter
+
+            val dividerItemDecoration = DividerItemDecoration(rv.getContext(),
+                    layoutManager.orientation)
+            rv.addItemDecoration(dividerItemDecoration)
         }
     }
 
     inner class WeatherAdapter(private val weatherData: WeatherData,
-                               private val context: MainActivity): RecyclerView.Adapter<WeatherAdapter.ViewHolder>(){
+                               private val context: MainActivity,
+                               private val icons: MutableMap<String,Drawable>):
+            RecyclerView.Adapter<WeatherAdapter.ViewHolder>(){
+
         override fun onBindViewHolder(holder: ViewHolder?, position: Int) {
             holder?.bindItems(weatherData.list[position])
         }
@@ -112,6 +155,9 @@ class MainActivity : AppCompatActivity() {
                 val highLow = itemView.findViewById(R.id.high_low) as TextView
                 val dayView = itemView.findViewById(R.id.day) as TextView
                 highLow.text = day.temp.max.toString() + ", " + day.temp.min.toString()
+
+                val icon = itemView.findViewById(R.id.weather_icon)as ImageView
+                icon.setImageDrawable(icons[day.weather[0].icon])
 
                 val unixSeconds: Long = day.dt
                 val date = Date(unixSeconds * 1000L)
